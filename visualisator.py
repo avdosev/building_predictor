@@ -1,7 +1,7 @@
 from osgeo import gdal 
 import matplotlib.pyplot as plt 
 
-dt = gdal.Open('data/30x150000/60/26.tif')
+dt = gdal.Open('data/city/nizniy/NN.tif')
 
 print(dt.RasterCount)
 
