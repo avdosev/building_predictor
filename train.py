@@ -32,7 +32,7 @@ class Maps(keras.utils.Sequence):
     def __init__(self, batch_size):
         self.batch_size = batch_size
         # получаем все пути к снимкам
-        city_paths = [os.path.join(root, file) for root, _, files in os.walk('data/city') if len(files) > 0 for file in files if file != "NN.tif"]
+        city_paths = [os.path.join(root, file) for root, _, files in os.walk('data/train') if len(files) > 0 for file in files]
         # загружаем все в память
         y = []
         x = []
