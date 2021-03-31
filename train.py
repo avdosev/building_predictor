@@ -60,7 +60,7 @@ class Maps(keras.utils.Sequence):
             df = gdal.Open(city_path)
             data = df.GetRasterBand(1).ReadAsArray()
             for i in range(0, data.shape[0]-11, 7):
-                for j in range(0, data.shape[1]-11, 9):
+                for j in range(0, data.shape[1]-11, 5):
                     val = data[i+5,j+5]
                     
                     # need skip
@@ -117,7 +117,7 @@ def main():
     train_dataset = Maps(config.batch_size)
     model.fit(
         train_dataset,
-        epochs=10,
+        epochs=8,
         initial_epoch=0,
         callbacks=[
             # keras.callbacks.EarlyStopping(monitor="loss", min_delta=0, patience=4, verbose=0, mode="min"),
