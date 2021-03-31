@@ -1,15 +1,37 @@
 from osgeo import gdal 
 import matplotlib.pyplot as plt 
+from matplotlib import colors
+files = [
+    'data/test/belgrad/90.tif',
+    'data/output/belgrad_predict.tif',
+]
 
-dt = gdal.Open('data/test/belgrad/90.tif')
-# dt = gdal.Open('data/output/belgrad_predict.tif')
+bounds = [
+    (1000+5, 3000-5, 5, 2500-5),
+    None,
+]
 
-print(dt.RasterCount)
+output_names = [
+    'belgrad_orig.png',
+    'belgrad_predict.png',
+]
 
-bands = dt.GetRasterBand(1).ReadAsArray() [1000+5:3000-5, 5:2500-5]
-bands = dt.GetRasterBand(1).ReadAsArray()
+for filename, bound, out_name in zip(files, bounds, output_names):
 
-f = plt.figure() 
-plt.imshow(bands, cmap='hot')
-plt.colorbar() 
-plt.savefig('d3.png') 
+    dt = gdal.Open(filename)
+
+    print(dt.RasterCount)
+
+    bands = dt.GetRasterBand(1).ReadAsArray()
+
+    if bound is not None:
+        bands = bands[bound[0]:bound[1], bound[2]:bound[3]]
+
+    cmap = colors.ListedColormap(['blue','green','black','yellow', 'grey', 'red'])
+    bounds=[0, 1, 2, 3, 4, 5, 6]
+
+    f = plt.figure() 
+    plt.imshow(bands, cmap=cmap)
+    plt.colorbar() 
+    plt.savefig(out_name) 
+    plt.show()
