@@ -12,7 +12,7 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 from tensorflow import keras
 import tensorflow as tf
 import model as m
-from train import train_pipe
+from common import train_pipe, bfs
 import config
 
 print('open data')
@@ -25,8 +25,9 @@ model.load_weights('models/model_best_first.hdf5')
 
 print('splitting...')
 splitted = np.array([np.expand_dims(data[i:i+11,j:j+11], axis=2) for i in range(0, data.shape[0]-10) for j in range(0, data.shape[1]-10)])
+info = np.array([bfs(i+5, j+5, original_data) for i in range(0, data.shape[0]-10) for j in range(0, data.shape[1]-10)])
 print('predicting...')
-res = model.predict(splitted, verbose=True, batch_size=config.batch_size)
+res = model.predict([splitted, info], verbose=True, batch_size=config.batch_size)
 
 print('preparing results')
 print('original shape', res.shape)

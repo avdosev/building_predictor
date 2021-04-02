@@ -13,12 +13,16 @@ def conv_layer(input):
 
 def get_model(class_count, embeding_size=20):
     input = keras.layers.Input(shape=(11, 11, 1))
+    input_info = keras.layers.Input(2)
     cnv_out = conv_layer(input)
-    embeding = keras.layers.Dense(embeding_size, activation='relu')(cnv_out)
+    embeding_input = keras.layers.concatenate([cnv_out, input_info])
+    embeding = keras.layers.Dense(embeding_size, activation='relu')(embeding_input)
     batch_emb = keras.layers.BatchNormalization()(embeding)
-    out = keras.layers.Dense(class_count, activation='softmax')(batch_emb)
+    embeding2 = keras.layers.Dense(embeding_size, activation='relu')(batch_emb)
+    batch_emb2 = keras.layers.BatchNormalization()(embeding2)
+    out = keras.layers.Dense(class_count, activation='softmax')(batch_emb2)
 
-    return keras.Model(inputs=input, outputs=out)
+    return keras.Model(inputs=[input, input_info], outputs=out)
 
 if __name__ == "__main__":
     model = get_model(4)

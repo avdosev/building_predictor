@@ -12,22 +12,7 @@ import tensorflow as tf
 import math
 import model as m
 import config
-
-def train_pipe(val):
-    # 0 = no data
-    # 1 = water surface
-    # 2 = land no built-up in any epoch
-    # 3 = built-up
-    i = np.where(val == 3, 2, val)
-    i = np.where(i > 3, 3, i)
-    return i
-
-def test_pipe(data):
-    i = np.where(data > 3, 3, data)
-    res = np.zeros((i.shape[0], 4), dtype=bool)
-    for j, item in enumerate(i):
-        res[j, item] = True
-    return res
+from common import train_pipe, test_pipe, bfs
 
 def horizontal_flip(image, rate=0.5):
     if np.random.rand() < rate:
@@ -46,6 +31,7 @@ def augment(image):
     return image
 
 
+
 class Maps(keras.utils.Sequence):
     def __init__(self, batch_size):
         self.batch_size = batch_size
@@ -54,20 +40,22 @@ class Maps(keras.utils.Sequence):
         # загружаем все в память
         y = []
         x = []
+        x2 = []
         print('start preparing')
         for city_path in city_paths:
             print(f'preparing "{city_path}"')
             df = gdal.Open(city_path)
             data = df.GetRasterBand(1).ReadAsArray()
             for i in range(0, data.shape[0]-11, 7):
-                for j in range(0, data.shape[1]-11, 5):
+                for j in range(0, data.shape[1]-11, 3):
                     val = data[i+5,j+5]
                     
                     # need skip
-                    if val == 0 or (val == 2 and i % 3 == 1):
+                    if val == 0 or (val == 2 and i % 2 == 1):
                         continue
                     
                     x.append(np.expand_dims(data[i:i+11,j:j+11], axis=2))
+                    x2.append(bfs(i+5,j+5,data))
                     y.append(val)
         
         y = np.array(y)
@@ -81,6 +69,7 @@ class Maps(keras.utils.Sequence):
         print('preparation ready')
         self.y = y
         self.x = x
+        self.x2 = x2
 
     def __len__(self):
         return math.ceil(len(self.x) / self.batch_size)
@@ -88,13 +77,15 @@ class Maps(keras.utils.Sequence):
     def __getitem__(self, idx):
         batch_x = np.array(self.x[idx * self.batch_size:
                               (idx + 1) * self.batch_size])
+        batch_x2 = np.array(self.x2[idx * self.batch_size:
+                              (idx + 1) * self.batch_size])
 
-        batch_x = augment(batch_x)
+        # batch_x = augment(batch_x)
         
         batch_y = np.array(self.y[idx * self.batch_size:
                               (idx + 1) * self.batch_size])
         
-        return batch_x, batch_y
+        return [batch_x, batch_x2], batch_y
 
 def main():
     name = 'first'
@@ -112,12 +103,12 @@ def main():
 
     model.compile(optimizer=optimizer,
                   loss='categorical_crossentropy',
-                  metrics=['accuracy', 'mae', tf.keras.metrics.FalseNegatives(), tf.keras.metrics.Recall(), tf.keras.metrics.Precision()])
+                  metrics=['accuracy', 'mae', tf.keras.metrics.FalseNegatives(), tf.keras.metrics.Recall(), tf.keras.metrics.AUC()])
 
     train_dataset = Maps(config.batch_size)
     model.fit(
         train_dataset,
-        epochs=8,
+        epochs=20,
         initial_epoch=0,
         callbacks=[
             # keras.callbacks.EarlyStopping(monitor="loss", min_delta=0, patience=4, verbose=0, mode="min"),
