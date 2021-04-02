@@ -89,7 +89,7 @@ class Maps(keras.utils.Sequence):
 
 def main():
     name = 'first'
-    model_path = f'models/{name}_latest.hdf5'
+    model_path = f'models/model_{name}_latest.hdf5'
 
     model = m.get_model(4)
 
