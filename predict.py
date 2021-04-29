@@ -32,36 +32,41 @@ def split_find_info(data):
             res.append(find_info(i+5, j+5, data))
     return res
 
-print('open data')
-dt = gdal.Open('data/test/belgrad/90.tif')
-original_data = dt.GetRasterBand(1).ReadAsArray()[1000:3000, :2500]
-data = train_pipe(original_data)
-print('open model')
-model = m.get_model(4)
-model.load_weights('models/model_best_first.hdf5')
+def process_city(filename, output_name, bounds):
+    print('open data')
+    dt = gdal.Open(filename)
+    original_data = dt.GetRasterBand(1).ReadAsArray()
+    if bounds is not None:
+        original_data = original_data[bounds[0]:bounds[1], bounds[2]:bounds[3]]
+    data = train_pipe(original_data)
+    print('open model')
+    model = m.get_model(4)
+    model.load_weights('models/model_best_first.hdf5')
 
-print('splitting...')
-splitted = np.array(split_map(data))
-print('find info...')
-info = np.array(split_find_info(original_data))
-print('predicting...')
-res = model.predict([splitted, info], verbose=True, batch_size=config.batch_size)
+    print('splitting...')
+    splitted = np.array(split_map(data))
+    print('find info...')
+    info = np.array(split_find_info(original_data))
+    print('predicting...')
+    res = model.predict([splitted, info], verbose=True, batch_size=config.batch_size)
 
-print('preparing results')
-print('original shape', res.shape)
+    print('preparing results')
+    print('original shape', res.shape)
 
-transformed = np.reshape(np.argmax(res, axis=1), tuple(np.array(data.shape[:2])-10))
-original_data = original_data[5:data.shape[0]-5, 5:data.shape[1]-5]
+    transformed = np.reshape(np.argmax(res, axis=1), tuple(np.array(data.shape[:2])-10))
+    original_data = original_data[5:data.shape[0]-5, 5:data.shape[1]-5]
 
-print(transformed.shape)
-print(original_data.shape)
+    print(transformed.shape)
+    print(original_data.shape)
 
-# удаляем оригинальные данные
-without_predict = np.where(original_data == 3, 2, original_data)
-# формируем результат; склеиваем считаем что данных которых не было это 3
-full_res = np.where((transformed == 3) & (without_predict == 2), 3, without_predict)
+    # удаляем оригинальные данные
+    without_predict = np.where(original_data == 3, 2, original_data)
+    # формируем результат; склеиваем считаем что данных которых не было это 3
+    full_res = np.where((transformed == 3) & (without_predict == 2), 3, without_predict)
 
-print('save_results')
+    print('save_results')
 
-write_tif('data/output/belgrad_predict.tif', full_res)
-write_tif('data/output/transformed.tif', transformed)
+    write_tif(f'data/output/{output_name}_predict.tif', full_res)
+
+process_city('data/test/belgrad/90.tif', 'belgrad', (1000,3000,0,2500))
+# process_city('data/train/ekb/82.tif', 'ekb', (0, 3000, 0, 3000))
