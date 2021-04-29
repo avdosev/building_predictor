@@ -12,7 +12,7 @@ import tensorflow as tf
 import math
 import model as m
 import config
-from common import train_pipe, test_pipe, bfs
+from common import train_pipe, test_pipe, find_info
 
 def horizontal_flip(image, rate=0.5):
     if np.random.rand() < rate:
@@ -47,7 +47,7 @@ class Maps(keras.utils.Sequence):
             df = gdal.Open(city_path)
             data = df.GetRasterBand(1).ReadAsArray()
             for i in range(0, data.shape[0]-11, 7):
-                for j in range(0, data.shape[1]-11, 3):
+                for j in range(0, data.shape[1]-11, 7):
                     val = data[i+5,j+5]
                     
                     # need skip
@@ -55,7 +55,7 @@ class Maps(keras.utils.Sequence):
                         continue
                     
                     x.append(np.expand_dims(data[i:i+11,j:j+11], axis=2))
-                    x2.append(bfs(i+5,j+5,data))
+                    x2.append(find_info(i+5,j+5,data))
                     y.append(val)
         
         y = np.array(y)
@@ -79,8 +79,6 @@ class Maps(keras.utils.Sequence):
                               (idx + 1) * self.batch_size])
         batch_x2 = np.array(self.x2[idx * self.batch_size:
                               (idx + 1) * self.batch_size])
-
-        # batch_x = augment(batch_x)
         
         batch_y = np.array(self.y[idx * self.batch_size:
                               (idx + 1) * self.batch_size])
@@ -103,12 +101,12 @@ def main():
 
     model.compile(optimizer=optimizer,
                   loss='categorical_crossentropy',
-                  metrics=['accuracy', 'mae', tf.keras.metrics.FalseNegatives(), tf.keras.metrics.Recall(), tf.keras.metrics.AUC()])
+                  metrics=['accuracy', 'mae', tf.keras.metrics.FalseNegatives(), tf.keras.metrics.Recall()])
 
     train_dataset = Maps(config.batch_size)
     model.fit(
         train_dataset,
-        epochs=20,
+        epochs=50,
         initial_epoch=0,
         callbacks=[
             # keras.callbacks.EarlyStopping(monitor="loss", min_delta=0, patience=4, verbose=0, mode="min"),
