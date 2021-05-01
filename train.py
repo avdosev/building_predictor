@@ -46,18 +46,20 @@ class Maps(keras.utils.Sequence):
             print(f'preparing "{city_path}"')
             df = gdal.Open(city_path)
             data = df.GetRasterBand(1).ReadAsArray()
-            for i in range(0, data.shape[0]-11, 7):
-                for j in range(0, data.shape[1]-11, 7):
-                    val = data[i+5,j+5]
+            for i in range(0, data.shape[0]-config.map_size, 5):
+                for j in range(0, data.shape[1]-config.map_size, 3):
+                    y_i = i+config.map_size // 2
+                    x_i = j+config.map_size // 2
+                    val = data[y_i, x_i]
                     
                     # need skip
                     if val == 0 or (val == 2 and i % 2 == 1):
                         continue
                     
-                    x.append(np.expand_dims(data[i:i+11,j:j+11], axis=2))
-                    x2.append(find_info(i+5,j+5,data))
+                    x.append(np.expand_dims(data[i:i+config.map_size,j:j+config.map_size], axis=2))
+                    x2.append(find_info(y_i, x_i, data))
                     y.append(val)
-        
+        print('start train pipe')
         y = np.array(y)
         y = test_pipe(y)
         
@@ -89,7 +91,7 @@ def main():
     name = 'first'
     model_path = f'models/model_{name}_latest.hdf5'
 
-    model = m.get_model(4)
+    model = m.get_model(4, conv_size=config.map_size)
 
     # if os.path.exists(model_path):
     #     model.load_weights(model_path)

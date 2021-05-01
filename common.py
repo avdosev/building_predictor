@@ -60,7 +60,7 @@ def count(posY, posX, map, limit):
         for x in range(max(posX-limit, 0), min(posX+limit, maxX)):
             if map[y, x] > 3:
                 count_build += 1
-            if map[y, x] == 2:
+            if map[y, x] == 2 or map[y, x] == 3:
                 count_land += 1
     return [count_build, count_land]
 
@@ -69,8 +69,9 @@ def find_info(posY, posX, map, limit=100, radius_build_limit=14):
     i1 = bfs(posY, posX, map, limit)
     i2 = count(posY, posX, map, radius_build_limit)
     on_water = map[posY, posX] == 1
-    on_land = map[posY, posX] == 2
-    return np.array(i1 + i2 + [on_water, on_land])
+    on_land = map[posY, posX] == 2 or map[posY, posX] == 3
+    on_build = map[posY, posX] > 3
+    return np.array(i1 + i2 + [on_water, on_land, on_build])
 
 def train_pipe(val):
     # 0 = no data

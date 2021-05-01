@@ -2,18 +2,18 @@ from osgeo import gdal
 import matplotlib.pyplot as plt 
 from matplotlib import colors
 files = [
-    'data/test/belgrad/90.tif',
-    'data/output/belgrad_predict.tif',
+    'data/test/tst/85.tif',
+    'data/output/85_predict.tif',
 ]
 
 bounds = [
-    (1000+5, 3000-5, 5, 2500-5),
+    (0+5, 3000-5, 0, 3000-5),
     None,
 ]
 
 output_names = [
-    'belgrad_orig.png',
-    'belgrad_predict.png',
+    '82_orig.png',
+    '82_predict.png',
 ]
 
 for filename, bound, out_name in zip(files, bounds, output_names):

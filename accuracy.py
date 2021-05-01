@@ -1,10 +1,11 @@
 from osgeo import gdal 
 import numpy as np
+import config
 
-dt = gdal.Open('data/test/belgrad/90.tif')
-dt2 = gdal.Open('data/output/belgrad_predict.tif')
+dt = gdal.Open('data/test/tst/82.tif')
+dt2 = gdal.Open('data/output/82_predict.tif')
 
-bands = dt.GetRasterBand(1).ReadAsArray() [1000+5:3000-5, 5:2500-5]
+bands = dt.GetRasterBand(1).ReadAsArray() [0+config.map_size//2:3000-config.map_size//2, 0+config.map_size//2:3000-config.map_size//2]
 bands2 = dt2.GetRasterBand(1).ReadAsArray()
 
 print('orig shape:', bands.shape)
